@@ -1,0 +1,175 @@
+📦 MJgram 프로젝트 구조
+================================
+
+mjgram-project/
+│
+├── 📄 mjgram_complete.html       # 프론트엔드 (Single Page Application)
+│   └── 기능: HTML + CSS + JavaScript 통합
+│   └── 특징: Supabase 직접 연동, 실시간 기능
+│
+├── 🐍 app.py                     # Flask 백엔드 서버
+│   └── 기능: REST API, 인증, 파일 업로드
+│   └── 특징: Supabase 연동, CORS 설정
+│
+├── 📋 requirements.txt           # Python 패키지 목록
+│   ├── Flask==3.0.0
+│   ├── flask-cors==4.0.0
+│   ├── supabase==2.3.0
+│   └── 기타...
+│
+├── 🗄️ supabase_setup.sql         # 데이터베이스 스키마
+│   ├── 테이블: users, posts, likes, comments
+│   ├── 함수: increment_likes, decrement_likes
+│   ├── RLS (Row Level Security) 설정
+│   └── Realtime 활성화
+│
+├── ⚙️ .env.example               # 환경 변수 예시
+│   ├── SUPABASE_URL
+│   ├── SUPABASE_KEY
+│   └── SECRET_KEY
+│
+├── 🚀 Procfile                   # Render 배포 설정
+│   └── web: gunicorn app:app
+│
+├── 📝 README.md                  # 프로젝트 문서
+│   ├── 설치 방법
+│   ├── 실행 방법
+│   ├── 배포 가이드
+│   └── API 문서
+│
+└── 🚫 .gitignore                 # Git 무시 파일
+    ├── venv/
+    ├── .env
+    └── __pycache__/
+
+
+🎯 시작하기
+================================
+
+1️⃣ 압축 해제
+   unzip mjgram-project.zip
+   cd mjgram-project
+
+2️⃣ 가상환경 생성
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+
+3️⃣ 패키지 설치
+   pip install -r requirements.txt
+
+4️⃣ 환경 변수 설정
+   cp .env.example .env
+   # .env 파일 수정
+
+5️⃣ Supabase 설정
+   - Supabase Dashboard → SQL Editor
+   - supabase_setup.sql 전체 실행
+
+6️⃣ 서버 실행
+   python app.py
+   
+7️⃣ 브라우저 열기
+   http://localhost:5000
+
+
+📊 데이터베이스 구조
+================================
+
+users
+├── id (UUID, PK)
+├── email (TEXT)
+├── username (TEXT)
+├── avatar (TEXT)
+└── created_at (TIMESTAMP)
+
+posts
+├── id (UUID, PK)
+├── user_id (UUID, FK)
+├── type (TEXT: image/code/project)
+├── content (TEXT)
+├── likes_count (INTEGER)
+└── created_at (TIMESTAMP)
+
+likes
+├── id (UUID, PK)
+├── post_id (UUID, FK)
+├── user_id (UUID, FK)
+└── created_at (TIMESTAMP)
+
+comments
+├── id (UUID, PK)
+├── post_id (UUID, FK)
+├── user_id (UUID, FK)
+├── content (TEXT)
+└── created_at (TIMESTAMP)
+
+
+🌐 API 엔드포인트
+================================
+
+인증
+POST   /api/auth/magic-link     이메일 매직 링크 전송
+GET    /api/auth/user           현재 사용자 정보
+
+게시물
+GET    /api/posts               피드 가져오기
+POST   /api/posts               게시물 생성
+DELETE /api/posts/:id           게시물 삭제
+POST   /api/posts/:id/like      좋아요 토글
+
+댓글
+GET    /api/posts/:id/comments  댓글 가져오기
+POST   /api/posts/:id/comments  댓글 추가
+
+기타
+POST   /api/upload/image        이미지 업로드
+POST   /api/github/repo         GitHub 레포 정보
+GET    /api/search              검색
+GET    /api/stats               통계
+
+
+⚡ 실시간 기능
+================================
+
+✅ 새 게시물 → 자동으로 피드에 추가
+✅ 좋아요 → 실시간 카운트 업데이트
+✅ 댓글 → 실시간 알림
+✅ WebSocket 기반 (Supabase Realtime)
+
+
+🚀 배포 (Render)
+================================
+
+1. GitHub에 푸시
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
+
+2. Render 설정
+   - New Web Service
+   - GitHub 연결
+   - Build Command: pip install -r requirements.txt
+   - Start Command: gunicorn app:app
+
+3. 환경 변수 추가
+   - SUPABASE_URL
+   - SUPABASE_KEY
+   - SECRET_KEY
+
+4. 배포!
+
+
+💡 팁
+================================
+
+- HTML만 사용: mjgram_complete.html을 브라우저에서 바로 열기
+- Flask 서버: 추가 API 기능 필요시 사용
+- 실시간 테스트: 브라우저 2개 띄우고 테스트
+- GitHub Token: .env에 추가하면 API Rate Limit 해결
+
+
+📞 문의
+================================
+
+Made with 💻 by MJ 코딩학원

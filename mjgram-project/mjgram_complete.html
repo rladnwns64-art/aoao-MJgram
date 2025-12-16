@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJgram - 코딩 SNS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #fafafa;
+            --card-bg: #ffffff;
+            --border-color: #dbdbdb;
+            --text-primary: #262626;
+            --text-secondary: #8e8e8e;
+            --link-color: #0095f6;
+            --like-color: #ed4956;
+            --code-bg: #1e1e1e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+        }
+
+        /* ========== 아이콘 SVG 스타일 ========== */
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .icon-small {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ========== 네비게이션 ========== */
+        .navbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 975px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            padding: 8px 16px 8px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--primary-bg);
+            width: 268px;
+            outline: none;
+        }
+
+        .search-bar .icon {
+            position: absolute;
+            left: 8px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            transform: scale(1.1);
+        }
+
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: var(--like-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+
+        /* ========== 메인 컨텐츠 ========== */
+        .main-content {
+            margin-top: 80px;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 975px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 30px;
+        }
+
+        .feed {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ========== 포스트 카드 ========== */
+        .post-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .post-header {
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .username {
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .username:hover {
+            opacity: 0.7;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .more-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        /* ========== 이미지 포스트 ========== */
+        .post-image {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        /* ========== 코드 포스트 ========== */
+        .post-code {
+            background: var(--code-bg);
+            padding: 16px;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .language-tag {
+            background: var(--link-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .post-code pre {
+            margin: 0;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .post-code .keyword {
+            color: #569cd6;
+        }
+
+        .post-code .string {
+            color: #ce9178;
+        }
+
+        .post-code .function {
+            color: #dcdcaa;
+        }
+
+        .post-code .comment {
+            color: #6a9955;
+        }
+
+        /* ========== 프로젝트 포스트 ========== */
+        .post-project {
+            padding: 20px;
+        }
+
+        .github-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .github-icon {
+            width: 48px;
+            height: 48px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .repo-info h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--link-color);
+        }
+
+        .repo-info p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .repo-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .lang-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            background: #f1e05a;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tech-tag {
+            background: var(--primary-bg);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--link-color);
+            border: 1px solid var(--link-color);
+        }
+
+        /* ========== 액션 버튼 ========== */
+        .post-actions {
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .action-left {
+            display: flex;
+            gap: 16px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.5;
+        }
+
+        .like-btn.liked .icon {
+            fill: var(--like-color);
+            animation: likeAnimation 0.3s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* ========== 좋아요/캡션/댓글 ========== */
+        .post-likes {
+            padding: 0 16px 8px;
+            font-size: 14px;
+        }
+
+        .post-caption {
+            padding: 0 16px 8px;
+            font-size: 14px;
+        }
+
+        .post-caption .username {
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .comment-input {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-input input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .comment-input button {
+            background: none;
+            border: none;
+            color: var(--link-color);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .comment-input button:hover {
+            opacity: 0.7;
+        }
+
+        /* ========== 사이드바 ========== */
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-profile .avatar {
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+        }
+
+        .bio {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .suggestions {
+            margin-bottom: 24px;
+        }
+
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .suggestions-header span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .suggestions-header a {
+            font-size: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .suggestion-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar-small {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+
+        .username-small {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+        }
+
+        .bio-small {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        .follow-btn {
+            margin-left: auto;
+            background: var(--link-color);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .follow-btn:hover {
+            opacity: 0.8;
+        }
+
+        .sidebar-footer {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ========== 로그인 페이지 ========== */
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--primary-bg);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 10px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo h1 {
+            font-size: 32px;
+            margin: 12px 0;
+            font-weight: 600;
+        }
+
+        .login-logo p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-form input {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: var(--primary-bg);
+        }
+
+        .auth-form input:focus {
+            border-color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: var(--link-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.8;
+        }
+
+        .signup-box {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .signup-box p {
+            font-size: 14px;
+        }
+
+        .signup-box a {
+            color: var(--link-color);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .mj-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .mj-badge p {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .mj-badge small {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .error-message {
+            color: var(--like-color);
+            font-size: 14px;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        /* ========== 모달 ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .upload-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .upload-tabs button {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .upload-tabs button.active {
+            background: var(--link-color);
+            color: white;
+            border-color: var(--link-color);
+        }
+
+        /* ========== 반응형 ========== */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .search-bar {
+                display: none;
+            }
+
+            .nav-container {
+                padding: 12px 16px;
+            }
+        }
+
+        /* ========== 로딩 애니메이션 ========== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--link-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 페이지 -->
+    <div id="loginPage" class="login-page">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-logo">
+                    <h1>MJgram</h1>
+                    <p>개발자들의 코딩 SNS</p>
+                </div>
+
+                <form id="loginForm" class="auth-form">
+                    <input type="email" id="loginEmail" placeholder="이메일 주소" required>
+                    <button type="submit" class="btn-primary">로그인 링크 보내기</button>
+                </form>
+
+                <p class="success-message" id="loginSuccess"></p>
+                <p class="error-message" id="loginError"></p>
+            </div>
+
+            <div class="login-box signup-box">
+                <p>계정이 없으신가요? <a onclick="showSignup()">가입하기</a></p>
+            </div>
+
+            <div class="mj-badge">
+                <p>🎓 MJ 코딩학원 학생이신가요?</p>
+                <small>@mj.ac.kr 이메일로 가입하면 특별 배지를 받아요!</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 모달 -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSignup()">&times;</span>
+            <h2>회원가입</h2>
+            <form id="signupForm" class="auth-form">
+                <input type="email" id="signupEmail" placeholder="이메일" required>
+                <input type="text" id="signupUsername" placeholder="사용자명" required>
+                <input type="password" id="signupPassword" placeholder="비밀번호 (6자 이상)" required>
+                <input type="text" id="githubUsername" placeholder="GitHub 사용자명 (선택)">
+                <button type="submit" class="btn-primary">가입하기</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div id="mainApp" class="hidden">
+        <!-- 네비게이션 바 -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="logo">
+                    <span>&lt;/&gt;</span> MJgram
+                </div>
+                
+                <div class="search-bar">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" placeholder="검색" id="searchInput">
+                </div>
+                
+                <div class="nav-menu">
+                    <div class="nav-item" onclick="showFeed()">
+                        <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="nav-item">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="nav-item" onclick="showUploadModal()">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="nav-item">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="nav-item" onclick="logout()">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <div class="container">
+                <!-- 피드 -->
+                <div class="feed" id="feed"></div>
+
+                <!-- 사이드바 -->
+                <aside class="sidebar">
+                    <div class="sidebar-profile">
+                        <div class="avatar" id="userAvatar">U</div>
+                        <div>
+                            <div class="username" id="sidebarUsername">사용자</div>
+                            <span class="bio">MJ 코딩학원</span>
+                        </div>
+                    </div>
+
+                    <div class="suggestions">
+                        <div class="suggestions-header">
+                            <span>회원님을 위한 추천</span>
+                            <a>모두 보기</a>
+                        </div>
+                        <div class="suggestion-item">
+                            <div class="avatar avatar-small">A</div>
+                            <div>
+                                <div class="username-small">mj_student_1</div>
+                                <span class="bio-small">Python 개발자</span>
+                            </div>
+                            <button class="follow-btn">팔로우</button>
+                        </div>
+                        <div class="suggestion-item">
+                            <div class="avatar avatar-small">B</div>
+                            <div>
+                                <div class="username-small">mj_student_2</div>
+                                <span class="bio-small">React 개발자</span>
+                            </div>
+                            <button class="follow-btn">팔로우</button>
+                        </div>
+                        <div class="suggestion-item">
+                            <div class="avatar avatar-small">C</div>
+                            <div>
+                                <div class="username-small">mj_coder</div>
+                                <span class="bio-small">알고리즘 마스터</span>
+                            </div>
+                            <button class="follow-btn">팔로우</button>
+                        </div>
+                    </div>
+
+                    <footer class="sidebar-footer">
+                        <p>&copy; 2024 MJgram · Made with 💻 by MJ 코딩학원</p>
+                    </footer>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- 업로드 모달 -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUploadModal()">&times;</span>
+            <h2>새 게시물 만들기</h2>
+            
+            <div class="upload-tabs">
+                <button onclick="setUploadType('image')" id="tab-image" class="active">📷 이미지</button>
+                <button onclick="setUploadType('code')" id="tab-code">💻 코드</button>
+                <button onclick="setUploadType('project')" id="tab-project">🚀 프로젝트</button>
+            </div>
+
+            <form id="uploadForm" class="auth-form">
+                <input type="hidden" id="uploadType" value="image">
+                
+                <div id="imageUploadSection">
+                    <input type="file" id="imageFile" accept="image/*" style="margin-bottom: 12px;">
+                </div>
+
+                <div id="codeUploadSection" class="hidden">
+                    <select id="codeLanguage" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 12px; width: 100%;">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                    </select>
+                    <textarea id="codeContent" placeholder="코드를 입력하세요..." rows="10" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace;"></textarea>
+                </div>
+
+                <div id="projectUploadSection" class="hidden">
+                    <input type="url" id="githubUrl" placeholder="GitHub 레포지토리 URL" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 12px; width: 100%;">
+                    <input type="text" id="techStack" placeholder="기술 스택 (예: React, Python)" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; width: 100%;">
+                </div>
+
+                <textarea id="postCaption" placeholder="설명을 입력하세요..." rows="3" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-top: 12px;"></textarea>
+                
+                <button type="submit" class="btn-primary">공유하기</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========== 로컬 DB (LocalStorage 사용) ==========
+        class LocalDB {
+            constructor() {
+                this.users = this.getItem('users') || [];
+                this.posts = this.getItem('posts') || [];
+                this.likes = this.getItem('likes') || [];
+                this.comments = this.getItem('comments') || [];
+                this.follows = this.getItem('follows') || [];
+                this.initDemoData();
+            }
+
+            getItem(key) {
+                const data = localStorage.getItem('mjgram_' + key);
+                return data ? JSON.parse(data) : null;
+            }
+
+            setItem(key, value) {
+                localStorage.setItem('mjgram_' + key, JSON.stringify(value));
+            }
+
+            initDemoData() {
+                if (this.users.length === 0) {
+                    this.users = [
+                        { id: '1', email: 'demo@mjgram.com', username: 'demo_user', password: 'demo123', avatar: 'D' },
+                        { id: '2', email: 'student1@mj.ac.kr', username: 'mj_student', password: '123456', avatar: 'M' },
+                        { id: '3', email: 'coder@mj.ac.kr', username: 'coder_123', password: '123456', avatar: 'C' }
+                    ];
+                    this.setItem('users', this.users);
+                }
+
+                if (this.posts.length === 0) {
+                    this.posts = [
+                        {
+                            id: '1',
+                            user_id: '2',
+                            type: 'code',
+                            content: '오늘 배운 Python 함수 복습! #python #코딩 #MJ학원',
+                            code: 'def hello_mjgram():\n    print("안녕하세요! MJgram입니다 🚀")\n    print("MJ 코딩학원 최고!")\n    \nhello_mjgram()',
+                            language: 'python',
+                            likes_count: 42,
+                            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+                        },
+                        {
+                            id: '2',
+                            user_id: '3',
+                            type: 'project',
+                            content: '드디어 첫 프로젝트 완성! 🎉 #웹개발 #프로젝트 #MJ학원',
+                            github_repo_url: 'https://github.com/mjcoder/awesome-project',
+                            tech_stack: 'React,Node.js,MongoDB',
+                            github_data: {
+                                name: 'my-awesome-project',
+                                description: 'MJ 학원에서 배운 내용으로 만든 웹 프로젝트입니다!',
+                                stars: 15,
+                                forks: 3,
+                                language: 'JavaScript'
+                            },
+                            likes_count: 28,
+                            created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+                        },
+                        {
+                            id: '3',
+                            user_id: '1',
+                            type: 'image',
+                            content: 'MJgram 첫 게시물! 🎨',
+                            image_url: 'demo',
+                            likes_count: 10,
+                            created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+                        }
+                    ];
+                    this.setItem('posts', this.posts);
+                }
+            }
+
+            // User 관련
+            findUser(email, password) {
+                return this.users.find(u => u.email === email && u.password === password);
+            }
+
+            createUser(userData) {
+                const newUser = {
+                    id: Date.now().toString(),
+                    ...userData,
+                    avatar: userData.username[0].toUpperCase()
+                };
+                this.users.push(newUser);
+                this.setItem('users', this.users);
+                return newUser;
+            }
+
+            getUserById(id) {
+                return this.users.find(u => u.id === id);
+            }
+
+            // Post 관련
+            getPosts() {
+                return this.posts.map(post => ({
+                    ...post,
+                    users: this.getUserById(post.user_id)
+                })).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+
+            createPost(postData) {
+                const newPost = {
+                    id: Date.now().toString(),
+                    ...postData,
+                    likes_count: 0,
+                    created_at: new Date().toISOString()
+                };
+                this.posts.push(newPost);
+                this.setItem('posts', this.posts);
+                return newPost;
+            }
+
+            // Like 관련
+            toggleLike(postId, userId) {
+                const likeIndex = this.likes.findIndex(l => l.post_id === postId && l.user_id === userId);
+                const post = this.posts.find(p => p.id === postId);
+                
+                if (likeIndex > -1) {
+                    this.likes.splice(likeIndex, 1);
+                    post.likes_count--;
+                } else {
+                    this.likes.push({ post_id: postId, user_id: userId });
+                    post.likes_count++;
+                }
+                
+                this.setItem('likes', this.likes);
+                this.setItem('posts', this.posts);
+                return likeIndex === -1;
+            }
+
+            isLiked(postId, userId) {
+                return this.likes.some(l => l.post_id === postId && l.user_id === userId);
+            }
+
+            // Comment 관련
+            addComment(postId, userId, content) {
+                const newComment = {
+                    id: Date.now().toString(),
+                    post_id: postId,
+                    user_id: userId,
+                    content,
+                    created_at: new Date().toISOString()
+                };
+                this.comments.push(newComment);
+                this.setItem('comments', this.comments);
+                return newComment;
+            }
+        }
+
+        // ========== 전역 변수 ==========
+        const db = new LocalDB();
+        let currentUser = null;
+
+        // Supabase 설정
+        const SUPABASE_URL = 'https://tyezthbjowdwnhkrxwjz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5ZXp0aGJqb3dkd25oa3J4d2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MDcwNTQsImV4cCI6MjA1MDA4MzA1NH0.rG8pXDihJCZyIj23vw_k-Ba1_w_';
+        let supabase = null;
+
+        // Supabase 초기화
+        function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                checkEmailLink();
+            }
+        }
+
+        // 이메일 링크 확인
+        async function checkEmailLink() {
+            if (window.location.hash) {
+                try {
+                    const { data, error } = await supabase.auth.getSession();
+                    if (error) throw error;
+                    
+                    if (data.session) {
+                        currentUser = {
+                            id: data.session.user.id,
+                            email: data.session.user.email,
+                            username: data.session.user.email.split('@')[0],
+                            avatar: data.session.user.email[0].toUpperCase()
+                        };
+                        localStorage.setItem('mjgram_currentUser', JSON.stringify(currentUser));
+                        window.location.hash = '';
+                        showMainApp();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('이메일 링크 인증 오류:', error);
+                }
+            }
+        }
+
+        // ========== 인증 관리 ==========
+        function checkAuth() {
+            const savedUser = localStorage.getItem('mjgram_currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            } else {
+                showLoginPage();
+            }
+        }
+
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadUserProfile();
+            loadFeed();
+        }
+
+        // 로그인 (이메일 링크)
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+
+            if (supabase) {
+                // Supabase 이메일 링크 로그인
+                try {
+                    const { error } = await supabase.auth.signInWithOtp({
+                        email: email,
+                        options: {
+                            emailRedirectTo: window.location.href
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    document.getElementById('loginSuccess').textContent = '✅ 이메일을 확인해주세요! 로그인 링크를 보냈습니다.';
+                    document.getElementById('loginError').textContent = '';
+                } catch (error) {
+                    document.getElementById('loginError').textContent = error.message;
+                    document.getElementById('loginSuccess').textContent = '';
+                }
+            } else {
+                // 로컬 DB (데모 모드)
+                const user = db.users.find(u => u.email === email);
+                
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('mjgram_currentUser', JSON.stringify(user));
+                    showMainApp();
+                } else {
+                    // 자동 회원가입
+                    const newUser = db.createUser({
+                        email: email,
+                        username: email.split('@')[0],
+                        password: 'magic-link'
+                    });
+                    currentUser = newUser;
+                    localStorage.setItem('mjgram_currentUser', JSON.stringify(newUser));
+                    showMainApp();
+                }
+            }
+        });
+
+        // 회원가입
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
+            const githubUsername = document.getElementById('githubUsername').value;
+
+            if (password.length < 6) {
+                alert('비밀번호는 6자 이상이어야 합니다.');
+                return;
+            }
+
+            const newUser = db.createUser({
+                email,
+                username,
+                password,
+                github_username: githubUsername || null
+            });
+
+            alert('회원가입이 완료되었습니다! 로그인해주세요.');
+            closeSignup();
+        });
+
+        // 로그아웃
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('mjgram_currentUser');
+            showLoginPage();
+        }
+
+        // ========== 프로필 로드 ==========
+        async function loadUserProfile() {
+            if (!currentUser) return;
+            
+            if (supabase) {
+                // Supabase에서 사용자 정보 가져오기
+                const { data } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (data) {
+                    currentUser.username = data.username;
+                    currentUser.avatar = data.username[0].toUpperCase();
+                }
+            }
+
+            document.getElementById('sidebarUsername').textContent = currentUser.username;
+            document.getElementById('userAvatar').textContent = currentUser.avatar;
+        }
+
+        // ========== 피드 로드 ==========
+        let postsSubscription = null;
+        let likesSubscription = null;
+        let commentsSubscription = null;
+
+        async function loadFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            if (supabase) {
+                // Supabase에서 게시물 가져오기
+                try {
+                    const { data: posts, error } = await supabase
+                        .from('posts')
+                        .select(`
+                            *,
+                            users (username, avatar)
+                        `)
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+
+                    if (error) throw error;
+
+                    feed.innerHTML = '';
+                    
+                    if (posts.length === 0) {
+                        feed.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">아직 게시물이 없습니다. 첫 게시물을 작성해보세요!</p>';
+                    } else {
+                        for (const post of posts) {
+                            // 좋아요 여부 확인
+                            const { data: likes } = await supabase
+                                .from('likes')
+                                .select('*')
+                                .eq('post_id', post.id)
+                                .eq('user_id', currentUser.id);
+
+                            post.liked = likes && likes.length > 0;
+                            
+                            const postHtml = createPostHTML(post, post.liked);
+                            feed.innerHTML += postHtml;
+                        }
+                        highlightCode();
+                    }
+
+                    // 실시간 구독 시작
+                    subscribeToRealtime();
+                } catch (error) {
+                    console.error('피드 로드 오류:', error);
+                    feed.innerHTML = '<p style="text-align: center; color: red;">피드를 불러오는데 실패했습니다.</p>';
+                }
+            } else {
+                // 로컬 DB 사용
+                setTimeout(() => {
+                    const posts = db.getPosts();
+                    feed.innerHTML = '';
+                    
+                    if (posts.length === 0) {
+                        feed.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">아직 게시물이 없습니다. 첫 게시물을 작성해보세요!</p>';
+                        return;
+                    }
+
+                    posts.forEach(post => {
+                        const liked = db.isLiked(post.id, currentUser.id);
+                        const postHtml = createPostHTML(post, liked);
+                        feed.innerHTML += postHtml;
+                    });
+
+                    highlightCode();
+                }, 500);
+            }
+        }
+
+        // ========== 실시간 구독 ==========
+        function subscribeToRealtime() {
+            if (!supabase) return;
+
+            // 기존 구독 해제
+            if (postsSubscription) supabase.removeChannel(postsSubscription);
+            if (likesSubscription) supabase.removeChannel(likesSubscription);
+            if (commentsSubscription) supabase.removeChannel(commentsSubscription);
+
+            // 1. 새 게시물 실시간 구독
+            postsSubscription = supabase
+                .channel('posts-channel')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'posts' },
+                    async (payload) => {
+                        console.log('🆕 새 게시물!', payload);
+                        
+                        // 사용자 정보 가져오기
+                        const { data: user } = await supabase
+                            .from('users')
+                            .select('username, avatar')
+                            .eq('id', payload.new.user_id)
+                            .single();
+
+                        const post = {
+                            ...payload.new,
+                            users: user,
+                            liked: false
+                        };
+
+                        // 피드 맨 위에 추가
+                        const feed = document.getElementById('feed');
+                        const postHtml = createPostHTML(post, false);
+                        feed.insertAdjacentHTML('afterbegin', postHtml);
+                        highlightCode();
+
+                        // 알림 표시
+                        showNotification('새 게시물이 올라왔습니다! 🎉');
+                    }
+                )
+                .on('postgres_changes',
+                    { event: 'DELETE', schema: 'public', table: 'posts' },
+                    (payload) => {
+                        console.log('🗑️ 게시물 삭제', payload);
+                        const postCard = document.querySelector(`[data-post-id="${payload.old.id}"]`);
+                        if (postCard) {
+                            postCard.style.opacity = '0';
+                            setTimeout(() => postCard.remove(), 300);
+                        }
+                    }
+                )
+                .subscribe();
+
+            // 2. 좋아요 실시간 구독
+            likesSubscription = supabase
+                .channel('likes-channel')
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'likes' },
+                    async (payload) => {
+                        console.log('❤️ 좋아요 추가', payload);
+                        updateLikesCount(payload.new.post_id);
+                    }
+                )
+                .on('postgres_changes',
+                    { event: 'DELETE', schema: 'public', table: 'likes' },
+                    async (payload) => {
+                        console.log('💔 좋아요 취소', payload);
+                        updateLikesCount(payload.old.post_id);
+                    }
+                )
+                .subscribe();
+
+            // 3. 댓글 실시간 구독
+            commentsSubscription = supabase
+                .channel('comments-channel')
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'comments' },
+                    async (payload) => {
+                        console.log('💬 새 댓글', payload);
+                        
+                        // 댓글 카운트 업데이트 (간단한 알림만)
+                        if (payload.new.user_id !== currentUser.id) {
+                            showNotification('새 댓글이 달렸습니다! 💬');
+                        }
+                    }
+                )
+                .subscribe();
+        }
+
+        // 좋아요 카운트 실시간 업데이트
+        async function updateLikesCount(postId) {
+            if (!supabase) return;
+
+            const { data: post } = await supabase
+                .from('posts')
+                .select('likes_count')
+                .eq('id', postId)
+                .single();
+
+            if (post) {
+                const likesElement = document.getElementById('likes-' + postId);
+                if (likesElement) {
+                    likesElement.textContent = post.likes_count;
+                }
+            }
+        }
+
+        // 알림 표시
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                font-size: 14px;
+                font-weight: 600;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showFeed() {
+            loadFeed();
+        }
+
+        // ========== 포스트 HTML 생성 ==========
+        function createPostHTML(post, liked) {
+            const timeAgo = getTimeAgo(post.created_at);
+            
+            let contentHTML = '';
+            
+            if (post.type === 'image') {
+                contentHTML = `<div class="post-image">📸</div>`;
+            } else if (post.type === 'code') {
+                contentHTML = `
+                    <div class="post-code">
+                        <div class="code-header">
+                            <span class="language-tag">${post.language}</span>
+                            <button class="copy-btn" onclick="copyCode('${post.id}')">📋 복사</button>
+                        </div>
+                        <pre id="code-${post.id}"><code>${escapeHtml(post.code)}</code></pre>
+                    </div>
+                `;
+            } else if (post.type === 'project') {
+                const githubData = post.github_data || {};
+                const techTags = post.tech_stack ? post.tech_stack.split(',').map(tech => 
+                    `<span class="tech-tag">${tech.trim()}</span>`
+                ).join('') : '';
+                
+                contentHTML = `
+                    <div class="post-project">
+                        <div class="github-card">
+                            <div class="github-icon">GH</div>
+                            <div class="repo-info">
+                                <h3>${githubData.name || 'GitHub Repository'}</h3>
+                                <p>${githubData.description || '프로젝트 설명'}</p>
+                                <div class="repo-stats">
+                                    <span>⭐ ${githubData.stars || 0}</span>
+                                    <span>🔀 ${githubData.forks || 0}</span>
+                                    <span><span class="lang-dot"></span> ${githubData.language || 'Code'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${techTags ? `<div class="tech-stack">${techTags}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <article class="post-card" data-post-id="${post.id}">
+                    <div class="post-header">
+                        <div class="user-info">
+                            <div class="avatar">${post.users.avatar}</div>
+                            <div>
+                                <div class="username">${post.users.username}</div>
+                                <span class="post-time">${timeAgo}</span>
+                            </div>
+                        </div>
+                        <button class="more-btn">⋯</button>
+                    </div>
+
+                    ${contentHTML}
+
+                    <div class="post-actions">
+                        <div class="action-left">
+                            <button class="action-btn like-btn ${liked ? 'liked' : ''}" onclick="toggleLike('${post.id}', this)">
+                                <svg class="icon" viewBox="0 0 24 24" fill="${liked ? '#ed4956' : 'none'}" stroke="${liked ? '#ed4956' : 'currentColor'}" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                            <button class="action-btn">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="action-btn">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="post-likes">
+                        <span class="likes-count">좋아요 <strong id="likes-${post.id}">${post.likes_count}</strong>개</span>
+                    </div>
+
+                    ${post.content ? `
+                        <div class="post-caption">
+                            <span class="username">${post.users.username}</span>
+                            <span>${post.content}</span>
+                        </div>
+                    ` : ''}
+
+                    <div class="comment-input">
+                        <input type="text" placeholder="댓글 달기..." id="comment-${post.id}">
+                        <button onclick="addComment('${post.id}')">게시</button>
+                    </div>
+                </article>
+            `;
+        }
+
+        // ========== 좋아요 토글 ==========
+        async function toggleLike(postId, btn) {
+            if (!currentUser) return;
+
+            if (supabase) {
+                // Supabase 사용
+                try {
+                    const { data: existing } = await supabase
+                        .from('likes')
+                        .select('*')
+                        .eq('post_id', postId)
+                        .eq('user_id', currentUser.id);
+
+                    const svg = btn.querySelector('svg');
+
+                    if (existing && existing.length > 0) {
+                        // 좋아요 취소
+                        await supabase.from('likes')
+                            .delete()
+                            .eq('post_id', postId)
+                            .eq('user_id', currentUser.id);
+
+                        // 카운트 감소
+                        await supabase.rpc('decrement_likes', { post_id: postId });
+                        
+                        btn.classList.remove('liked');
+                        svg.setAttribute('fill', 'none');
+                        svg.setAttribute('stroke', 'currentColor');
+                    } else {
+                        // 좋아요 추가
+                        await supabase.from('likes').insert({
+                            post_id: postId,
+                            user_id: currentUser.id
+                        });
+
+                        // 카운트 증가
+                        await supabase.rpc('increment_likes', { post_id: postId });
+                        
+                        btn.classList.add('liked');
+                        svg.setAttribute('fill', '#ed4956');
+                        svg.setAttribute('stroke', '#ed4956');
+                    }
+
+                    // 실시간으로 카운트가 업데이트됨
+                } catch (error) {
+                    console.error('좋아요 오류:', error);
+                }
+            } else {
+                // 로컬 DB 사용
+                const liked = db.toggleLike(postId, currentUser.id);
+                const post = db.posts.find(p => p.id === postId);
+                
+                document.getElementById('likes-' + postId).textContent = post.likes_count;
+                
+                const svg = btn.querySelector('svg');
+                if (liked) {
+                    btn.classList.add('liked');
+                    svg.setAttribute('fill', '#ed4956');
+                    svg.setAttribute('stroke', '#ed4956');
+                } else {
+                    btn.classList.remove('liked');
+                    svg.setAttribute('fill', 'none');
+                    svg.setAttribute('stroke', 'currentColor');
+                }
+            }
+        }
+
+        // ========== 댓글 추가 ==========
+        async function addComment(postId) {
+            const input = document.getElementById('comment-' + postId);
+            const content = input.value.trim();
+
+            if (!content) return;
+
+            if (supabase) {
+                try {
+                    await supabase.from('comments').insert({
+                        post_id: postId,
+                        user_id: currentUser.id,
+                        content
+                    });
+
+                    input.value = '';
+                    alert('댓글이 추가되었습니다!');
+                } catch (error) {
+                    console.error('댓글 추가 오류:', error);
+                    alert('댓글 추가에 실패했습니다.');
+                }
+            } else {
+                db.addComment(postId, currentUser.id, content);
+                input.value = '';
+                alert('댓글이 추가되었습니다!');
+            }
+        }
+
+        // ========== 업로드 ==========
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const type = document.getElementById('uploadType').value;
+            const caption = document.getElementById('postCaption').value;
+
+            let postData = {
+                user_id: currentUser.id,
+                type,
+                content: caption
+            };
+
+            try {
+                if (type === 'image') {
+                    const file = document.getElementById('imageFile').files[0];
+                    if (!file) {
+                        alert('이미지를 선택해주세요!');
+                        return;
+                    }
+
+                    if (supabase) {
+                        // Supabase Storage에 업로드
+                        const fileName = `${Date.now()}_${file.name}`;
+                        const { error: uploadError } = await supabase.storage
+                            .from('posts')
+                            .upload(`${currentUser.id}/${fileName}`, file);
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('posts')
+                            .getPublicUrl(`${currentUser.id}/${fileName}`);
+
+                        postData.image_url = publicUrl;
+                    } else {
+                        postData.image_url = 'uploaded';
+                    }
+                } else if (type === 'code') {
+                    postData.code = document.getElementById('codeContent').value;
+                    postData.language = document.getElementById('codeLanguage').value;
+                } else if (type === 'project') {
+                    postData.github_repo_url = document.getElementById('githubUrl').value;
+                    postData.tech_stack = document.getElementById('techStack').value;
+                    postData.github_data = {
+                        name: 'new-project',
+                        description: caption,
+                        stars: 0,
+                        forks: 0,
+                        language: 'JavaScript'
+                    };
+                }
+
+                if (supabase) {
+                    // Supabase에 저장 - 실시간으로 다른 사용자에게 표시됨
+                    const { error } = await supabase.from('posts').insert(postData);
+                    if (error) throw error;
+                } else {
+                    // 로컬 DB에 저장
+                    db.createPost(postData);
+                }
+
+                alert('게시물이 업로드되었습니다!');
+                closeUploadModal();
+                loadFeed();
+            } catch (error) {
+                console.error('업로드 오류:', error);
+                alert('업로드에 실패했습니다: ' + error.message);
+            }
+        });
+
+        // ========== 모달 관리 ==========
+        function showSignup() {
+            document.getElementById('signupModal').style.display = 'block';
+        }
+
+        function closeSignup() {
+            document.getElementById('signupModal').style.display = 'none';
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').style.display = 'block';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        function setUploadType(type) {
+            document.getElementById('uploadType').value = type;
+            
+            // 탭 활성화
+            ['image', 'code', 'project'].forEach(t => {
+                document.getElementById('tab-' + t).classList.remove('active');
+                document.getElementById(t + 'UploadSection').classList.add('hidden');
+            });
+            document.getElementById('tab-' + type).classList.add('active');
+            document.getElementById(type + 'UploadSection').classList.remove('hidden');
+        }
+
+        // ========== 유틸리티 함수 ==========
+        function getTimeAgo(dateString) {
+            const now = new Date();
+            const past = new Date(dateString);
+            const diff = Math.floor((now - past) / 1000);
+
+            if (diff < 60) return '방금 전';
+            if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+            if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+            return past.toLocaleDateString('ko-KR');
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function copyCode(postId) {
+            const code = document.getElementById('code-' + postId).textContent;
+            navigator.clipboard.writeText(code);
+            alert('코드가 복사되었습니다!');
+        }
+
+        function highlightCode() {
+            // 간단한 Python 문법 하이라이트
+            document.querySelectorAll('.post-code code').forEach(block => {
+                let html = block.innerHTML;
+                html = html.replace(/\b(def|class|import|from|return|if|else|for|while|print)\b/g, '<span class="keyword">$1</span>');
+                html = html.replace(/"([^"]*)"/g, '<span class="string">"$1"</span>');
+                html = html.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g, '<span class="function">$1</span>(');
+                html = html.replace(/#(.*)$/gm, '<span class="comment">#$1</span>');
+                block.innerHTML = html;
+            });
+        }
+
+        // ========== 초기화 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            initSupabase();
+            checkAuth();
+        });
+
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
